@@ -37,14 +37,14 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
 
 ## Data Schema
 
- Key Name                                            | Type       | Content                   | Delete Timing
------------------------------------------------------+------------+---------------------------+-----------------------------------------------
- Queues                                              | Sorted Set | Queue Names               | note deleted
- Queues:${QueueName}                                 | Hash       | Queue Attributes          | DeleteQueue action
- Queues:${QueueName}:Messages                        | Sorted Set | MessageIds                | programatically deleted when Hash was expired)
- Queues:${QueueName}:Messages:${MessageId}           | Hash       | Message Attributes        | automatically expires
- Queues:${QueueName}:Messages:${MessageId}:Delayed   | String     | ${MessageId} is delayed   | automatically expires
- Queues:${QueueName}:Messages:${MessageId}:Invisible | String     | ${MessageId} is invisible | automatically expires
+| Key Name                                            | Type       | Content                   | Delete Timing                                 |
+| --------------------------------------------------- | ---------- | ------------------------- | --------------------------------------------- |
+| Queues                                              | Sorted Set | Queue Names               | note deleted                                  |
+| Queues:${QueueName}                                 | Hash       | Queue Attributes          | DeleteQueue action                            |
+| Queues:${QueueName}:Messages                        | Sorted Set | MessageIds                | programatically deleted when Hash was expired |
+| Queues:${QueueName}:Messages:${MessageId}           | Hash       | Message Attributes        | automatically expires                         |
+| Queues:${QueueName}:Messages:${MessageId}:Delayed   | String     | ${MessageId} is delayed   | automatically expires                         |
+| Queues:${QueueName}:Messages:${MessageId}:Invisible | String     | ${MessageId} is invisible | automatically expires                         |
 
 ## TODO
 
