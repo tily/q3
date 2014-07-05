@@ -4,6 +4,12 @@
 
 Simple Amazon SQS compatible API implementation with sinatra and redis.
 
+## Concept
+
+* simplicity
+* no authentication, open like wiki
+* no validation, just works as proxy to redis functions
+
 ## Actions
 
 See for complete action list: [Welcome - Amazon Simple Queue Service](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/Welcome.html).
@@ -19,15 +25,15 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
    * DeleteQueue
  * Message Operation
    * SendMessage
-   * SendMessageBatch
    * ReceiveMessage
    * ChangeMessageVisibility
-   * ChangeMessageVisibilityBatch
    * DeleteMessage
-   * DeleteMessageBatch
 
 ### will be implemented
 
+ * SendMessageBatch
+ * ChangeMessageVisibilityBatch
+ * DeleteMessageBatch
  * ListDeadLetterSourceQueues
 
 ### will not be implemented
@@ -37,17 +43,17 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
 
 ## Data Schema
 
-| Key Name                                            | Type       | Content                   | Delete Timing                                 |
-| --------------------------------------------------- | ---------- | ------------------------- | --------------------------------------------- |
-| Queues                                              | Sorted Set | Queue Names               | note deleted                                  |
-| Queues:${QueueName}                                 | Hash       | Queue Attributes          | DeleteQueue action                            |
-| Queues:${QueueName}:Messages                        | Sorted Set | MessageIds                | programatically deleted when Hash was expired |
-| Queues:${QueueName}:Messages:${MessageId}           | Hash       | Message Attributes        | automatically expires                         |
-| Queues:${QueueName}:Messages:${MessageId}:Delayed   | String     | ${MessageId} is delayed   | automatically expires                         |
-| Queues:${QueueName}:Messages:${MessageId}:Invisible | String     | ${MessageId} is invisible | automatically expires                         |
+| Key Name                                               | Type       | Content                        | Delete Timing                                 |
+| ------------------------------------------------------ | ---------- | ------------------------------ | --------------------------------------------- |
+| Queues                                                 | Sorted Set | Queue Names                    | -                                             |
+| Queues:${QueueName}                                    | Hash       | Queue Attributes               | DeleteQueue action                            |
+| Queues:${QueueName}:Messages                           | Sorted Set | Message Ids                    | DeleteQueue action                            |
+| Queues:${QueueName}:ReceiptHandles                     | Hash       | ReceiptHandle to MessageId Map | expires due to VisibilityTimeout              |
+| Queues:${QueueName}:Messages:${MessageId}              | Hash       | Message Attributes             | expires due to MessageRetentionPeriod         |
+| Queues:${QueueName}:Messages:${MessageId}:Delayed      | String     | Message Id                     | expires due to DelaySeconds                   |
+| Queues:${QueueName}:Messages:${MessageId}:NotVisible   | String     | ${MessageId} is invisible      | expires due to VisibilityTimeout              |
 
 ## TODO
 
  * https
  * mount on subdirectory
-
