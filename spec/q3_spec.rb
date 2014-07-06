@@ -154,6 +154,24 @@ describe "Q3" do
 
 				it 'should receive message attributes' do
 					queue = q3.queues.create('myqueue001')
+					sent_at = Time.now.to_i
+					queue.send_message('hello')
+
+					sleep 3
+					now = Time.now.to_i
+					message  = queue.receive_message(visibility_timeout: 1)
+					expect(message.sender_id).to eq('*')
+					expect(message.sent_timestamp.to_i).to be_within(1).of(sent_at)
+					expect(message.approximate_first_receive_timestamp.to_i).to be_within(1).of(now)
+					expect(message.approximate_receive_count.to_i).to eq(1)
+
+					sleep 2
+					message = queue.receive_message(visibility_timeout: 1)
+					expect(message.approximate_receive_count.to_i).to eq(2)
+				end
+
+				it 'should receive message attributes' do
+					queue = q3.queues.create('myqueue001')
 					1.upto(10) do |i|
 						queue.send_message("hello #{i}")
 					end
