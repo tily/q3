@@ -12,6 +12,12 @@ RSpec.configure do |config|
   
 end
 
+#AWS.config(
+#	logger: Logger.new($stdout),
+#	log_level: :debug,
+#	http_wire_trace: true
+#)
+
 def q3
 	@q3 ||= AWS::SQS.new(
 		:sqs_endpoint => 'localhost',
