@@ -50,7 +50,7 @@ class Q3 < Sinatra::Base
 	action('CreateQueue') do
 		timestamp = Time.now.to_i
 		hash = CREATE_QUEUE.inject({'CreateTimestamp' => timestamp, 'LastModifiedTimestamp' => timestamp}) do |hash, attribute|
-			hash[attribute] = params[attribute] || DEFAULTS[attribute]
+			hash[attribute] = attributes[attribute] || DEFAULTS[attribute]
 			hash
 		end
 		redis.sadd("Queues", params[:QueueName])
@@ -83,12 +83,6 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('SetQueueAttributes', '/*/:QueueName') do
-		attributes = (1..10).to_a.inject({}) do |attributes, i|
-			if (name = params["Attribute.#{i.to_s}.Name"]) && (value = params["Attribute.#{i.to_s}.Value"])
-				attributes[name] = value
-			end
-			attributes
-		end
 		hash = SET_QUEUE_ATTRIBUTES.inject({'LastModifiedTimestamp' => Time.now.to_i}) do |hash, attribute|
 			hash[attribute] = attributes[attribute] if attributes[attribute]
 			hash
@@ -192,6 +186,15 @@ class Q3 < Sinatra::Base
 	
 		def queue_url(queue_name)
 			"http://#{env['HTTP_HOST']}/*/#{queue_name}"
+		end
+
+		def attributes
+			@attributes ||= (1..10).to_a.inject({}) do |attributes, i|
+				if (name = params["Attribute.#{i.to_s}.Name"]) && (value = params["Attribute.#{i.to_s}.Value"])
+					attributes[name] = value
+				end
+				attributes
+			end
 		end
 	
 		def return_xml(&block)
