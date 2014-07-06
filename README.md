@@ -92,7 +92,7 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
 
 | Key Name                                                | Type       | Content                        | Delete Timing                                 |
 | ------------------------------------------------------- | ---------- | ------------------------------ | --------------------------------------------- |
-| Queues                                                  | List       | Queue Names                    | -                                             |
+| Queues                                                  | Set        | Queue Names                    | -                                             |
 | Queues:${QueueName}                                     | Hash       | Queue Attributes               | DeleteQueue action                            |
 | Queues:${QueueName}:Messages                            | List       | Message Ids                    | DeleteQueue action                            |
 | Queues:${QueueName}:Messages:${MessageId}               | Hash       | Message Attributes             | expires due to MessageRetentionPeriod         |
