@@ -73,7 +73,7 @@ class Q3 < Sinatra::Base
 		validate_queue_existence
 		delayed = redis.keys("Queues:#{params[:QueueName]}:Messages:*:Delayed").size
 		not_visible = redis.keys("Queues:#{params[:QueueName]}:Messages:*:ReceiptHandle").size
-		messages = redis.zcount("Queues:#{params[:QueueName]}:Messages", '-inf', '+inf') - delayed - not_visible
+		messages = redis.llen("Queues:#{params[:QueueName]}:Messages") - delayed - not_visible
 		return_xml do |xml|
 			queue.each do |name, value|
 				xml.Attribute { xml.Name name; xml.Value value }
