@@ -72,6 +72,16 @@ describe "Q3" do
 					expect(res[:attributes]["ApproximateNumberOfMessagesDelayed"]).to eq("0")
 				end
 
+				it 'should get updated LastModifiedTimestamp' do
+					past = Time.now.to_i
+					queue = q3.queues.create('myqueue001')
+					sleep 3
+					now = Time.now.to_i
+					queue.visibility_timeout = 1
+					expect(queue.last_modified_timestamp.to_i).not_to be_within(2).of(past)
+					expect(queue.last_modified_timestamp.to_i).to be_within(2).of(now)
+				end
+
 				it 'should get precise ApproximateNumberOfMessages*' do
 					queue = q3.queues.create('myqueue001')
 
