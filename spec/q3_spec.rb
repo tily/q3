@@ -170,6 +170,35 @@ describe "Q3" do
 	end
 
 	context 'Features' do
+		context 'Message Extention Period' do
+			it 'with CreateQueue MessageExtentionPeriod' do
+				queue = q3.queues.create('myqueue001', :message_retention_period => 3)
+
+				queue.send_message('hello')
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+
+				queue.send_message('hello')
+				sleep 4
+				message = queue.receive_message
+				expect(message).to be_nil
+			end
+
+			it 'with SetQueueAttributes MessageExtentionPeriod' do
+				queue = q3.queues.create('myqueue001')
+				queue.message_retention_period = 3
+
+				queue.send_message('hello')
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+
+				queue.send_message('hello')
+				sleep 4
+				message = queue.receive_message
+				expect(message).to be_nil
+			end
+		end
+
 		context 'Delayed Message' do
 			it 'with CreateQueue DelaySeconds' do
 				queue = q3.queues.create('myqueue001', :delay_seconds => 3)
