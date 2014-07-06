@@ -1,4 +1,4 @@
-%w(digest/md5 json sinatra/base builder redis redis-namespace).each {|x| require x }
+%w(digest/md5 sinatra/base builder redis redis-namespace).each {|x| require x }
 
 class Q3 < Sinatra::Base
 	configure do
@@ -194,7 +194,7 @@ class Q3 < Sinatra::Base
 	
 	helpers do
 		def redis
-			@redis ||= Redis::Namespace.new(:Q3, redis: Redis.connect)
+			@redis ||= Redis::Namespace.new(:Q3, redis: Redis.new(url: ENV['REDISTOGO_URL'] || 'redis://localhost:6379/15'))
 		end
 	
 		def request_id
