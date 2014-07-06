@@ -213,6 +213,24 @@ describe "Q3" do
 			end
 		end
 
+		context 'First In First Out' do
+			it 'First in first out' do
+				queue = q3.queues.create('myqueue001', :visibility_timeout => 3)
+
+				1.upto(10) do |i|
+					queue.send_message("hello #{i}")
+				end
+
+				1.upto(10) do |i|
+					message = queue.receive_message
+					expect(message.body).to eq("hello #{i}")
+				end
+			end
+		end
+
+		context 'Long Polling' do
+		end
+
 		context 'Visibility Timeout' do
 			it 'with CreateQueue VisibilityTimeout' do
 				queue = q3.queues.create('myqueue001', :visibility_timeout => 3)
