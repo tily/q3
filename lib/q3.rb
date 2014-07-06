@@ -48,7 +48,7 @@ class Q3 < Sinatra::Base
 
 	action('CreateQueue') do
 		halt 400, return_error_xml('Sender', 'MissingParameter', '') if params['QueueName'].nil?
-		timestamp = Time.now.to_i
+		timestamp = now
 		hash = CREATE_QUEUE.inject({'CreateTimestamp' => timestamp, 'LastModifiedTimestamp' => timestamp}) do |hash, attribute|
 			hash[attribute] = attributes[attribute] || DEFAULTS[attribute]
 			hash
@@ -86,7 +86,7 @@ class Q3 < Sinatra::Base
 	
 	action('SetQueueAttributes', '/*/:QueueName') do
 		validate_queue_existence
-		hash = SET_QUEUE_ATTRIBUTES.inject({'LastModifiedTimestamp' => Time.now.to_i}) do |hash, attribute|
+		hash = SET_QUEUE_ATTRIBUTES.inject({'LastModifiedTimestamp' => now}) do |hash, attribute|
 			hash[attribute] = attributes[attribute] if attributes[attribute]
 			hash
 		end
@@ -110,7 +110,7 @@ class Q3 < Sinatra::Base
 			'MessageId', message_id,
 			'MessageBody', params[:MessageBody],
 			'SenderId', '*',
-			'SentTimestamp', Time.now.to_i,
+			'SentTimestamp', now,
 			'ApproximateReceiveCount', 0
 		)
 		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}", queue['MessageRetentionPeriod'])
@@ -134,8 +134,8 @@ class Q3 < Sinatra::Base
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle")
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
 			message = redis.hgetall("Queues:#{params[:QueueName]}:Messages:#{message_id}")
-			message['ApproximateFirstReceiveTimestamp'] ||= Time.now.to_i
-			message['ApproximateReceiveCount'] = message['ApproximateReceiveCount'].to_i + 1
+			message['ApproximateFirstReceiveTimestamp'] ||= now
+			message['ApproximateReceiveCount'] = (message['ApproximateReceiveCount'].to_i + 1).to_s
 			redis.hmset("Queues:#{params[:QueueName]}:Messages:#{message_id}", message.to_a.flatten)
 			receipt_handle = SecureRandom.uuid
 			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", receipt_handle)
@@ -244,6 +244,10 @@ class Q3 < Sinatra::Base
 
 		def validate_queue_existence
 			halt 400, return_error_xml('Sender', 'NonExistentQueue', 'The specified queue does not exist for this wsdl version.') if queue.empty?
+		end
+
+		def now
+			(Time.now.to_f * 1000.0).to_i
 		end
 	end
 
