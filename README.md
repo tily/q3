@@ -43,15 +43,15 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
 
 ## Data Schema
 
-| Key Name                                               | Type       | Content                        | Delete Timing                                 |
-| ------------------------------------------------------ | ---------- | ------------------------------ | --------------------------------------------- |
-| Queues                                                 | Sorted Set | Queue Names                    | -                                             |
-| Queues:${QueueName}                                    | Hash       | Queue Attributes               | DeleteQueue action                            |
-| Queues:${QueueName}:Messages                           | Sorted Set | Message Ids                    | DeleteQueue action                            |
-| Queues:${QueueName}:ReceiptHandles                     | Hash       | ReceiptHandle to MessageId Map | expires due to VisibilityTimeout              |
-| Queues:${QueueName}:Messages:${MessageId}              | Hash       | Message Attributes             | expires due to MessageRetentionPeriod         |
-| Queues:${QueueName}:Messages:${MessageId}:Delayed      | String     | Message Id                     | expires due to DelaySeconds                   |
-| Queues:${QueueName}:Messages:${MessageId}:NotVisible   | String     | ${MessageId} is invisible      | expires due to VisibilityTimeout              |
+| Key Name                                                | Type       | Content                        | Delete Timing                                 |
+| ------------------------------------------------------- | ---------- | ------------------------------ | --------------------------------------------- |
+| Queues                                                  | Sorted Set | Queue Names                    | -                                             |
+| Queues:${QueueName}                                     | Hash       | Queue Attributes               | DeleteQueue action                            |
+| Queues:${QueueName}:Messages                            | Sorted Set | Message Ids                    | DeleteQueue action                            |
+| Queues:${QueueName}:Messages:${MessageId}               | Hash       | Message Attributes             | expires due to MessageRetentionPeriod         |
+| Queues:${QueueName}:Messages:${MessageId}:Delayed       | String     | Message Id                     | expires due to DelaySeconds                   |
+| Queues:${QueueName}:Messages:${MessageId}:ReceiptHandle | String     | ReceiptHandle                  | expires due to VisibilityTimeout              |
+| Queues:${QueueName}:ReceiptHandles:${ReceiptHandle}     | String     | Message Id                     | expires due to VisibilityTimeout              |
 
 ## TODO
 

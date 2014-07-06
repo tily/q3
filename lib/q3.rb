@@ -73,7 +73,7 @@ class Q3 < Sinatra::Base
 	action('GetQueueAttributes', '/*/:QueueName') do
 		validate_queue_existence
 		delayed = redis.keys("Queues:#{params[:QueueName]}:Messages:*:Delayed").size
-		not_visible = redis.keys("Queues:#{params[:QueueName]}:Messages:*:NotVisible").size
+		not_visible = redis.keys("Queues:#{params[:QueueName]}:Messages:*:ReceiptHandle").size
 		messages = redis.zcount("Queues:#{params[:QueueName]}:Messages", '-inf', '+inf') - delayed - not_visible
 		return_xml do |xml|
 			queue.each do |name, value|
@@ -131,13 +131,14 @@ class Q3 < Sinatra::Base
 		visible_messages = []
 		message_ids = redis.zrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
 		message_ids.each do |message_id|
-			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible")
+			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle")
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
 			message_body = redis.hget("Queues:#{params[:QueueName]}:Messages:#{message_id}", 'MessageBody')
 			receipt_handle = SecureRandom.uuid
-			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", receipt_handle)
-			redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", visibility_timeout)
-			redis.hset("Queues:#{params[:QueueName]}:ReceiptHandles", receipt_handle, message_id)
+			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", receipt_handle)
+			redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", visibility_timeout)
+			redis.set("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", message_id)
+			redis.expire("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", visibility_timeout)
 			visible_messages << {:MessageId => message_id, :MessageBody => message_body, :ReceiptHandle => receipt_handle}
 			break if visible_messages.size >= 1
 		end
@@ -155,8 +156,9 @@ class Q3 < Sinatra::Base
 	
 	action('ChangeMessageVisibility', '/*/:QueueName') do
 		validate_queue_existence
-		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
-		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", params['VisibilityTimeout'])
+		message_id = redis.get("Queues:#{params[:QueueName]}:ReceiptHandles:#{params[:ReceiptHandle]}")
+		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", params['VisibilityTimeout'])
+		redis.expire("Queues:#{params[:QueueName]}:ReceiptHandles:#{params[:ReceiptHandle]}", params['VisibilityTimeout'])
 		return_xml {}
 	end
 
