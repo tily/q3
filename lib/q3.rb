@@ -126,7 +126,7 @@ class Q3 < Sinatra::Base
 	
 	action('ReceiveMessage', '/*/:QueueName') do
 		validate_queue_existence
-		max_number_of_messages = params['MaxNumberOfMessages']
+		max_number_of_messages = params['MaxNumberOfMessages'] ? params['MaxNumberOfMessages'].to_i : 1
 		visibility_timeout = params['VisibilityTimeout'] || queue['VisibilityTimeout']
 		visible_messages = []
 		message_ids = redis.lrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
