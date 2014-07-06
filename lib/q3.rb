@@ -65,10 +65,12 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('GetQueueUrl') do
+		validate_queue_existence
 		return_xml {|xml| xml.QueueUrl queue_url(params[:QueueName]) }
 	end
 	
 	action('GetQueueAttributes', '/*/:QueueName') do
+		validate_queue_existence
 		delayed = redis.keys("Queues:#{params[:QueueName]}:Messages:*:Delayed").size
 		not_visible = redis.keys("Queues:#{params[:QueueName]}:Messages:*:NotVisible").size
 		messages = redis.zcount("Queues:#{params[:QueueName]}:Messages", '-inf', '+inf') - delayed - not_visible
@@ -83,6 +85,7 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('SetQueueAttributes', '/*/:QueueName') do
+		validate_queue_existence
 		hash = SET_QUEUE_ATTRIBUTES.inject({'LastModifiedTimestamp' => Time.now.to_i}) do |hash, attribute|
 			hash[attribute] = attributes[attribute] if attributes[attribute]
 			hash
@@ -92,6 +95,7 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('DeleteQueue', '/*/:QueueName') do
+		validate_queue_existence
 		if !UNDELETABLE_QUEUES.include?(params[:QueueName])
 			redis.keys("Queues:#{params[:QueueName]}*").each {|key| redis.del(key) }
 			redis.srem("Queues", params[:QueueName])
@@ -100,6 +104,7 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('SendMessage', '/*/:QueueName') do
+		validate_queue_existence
 		delay_seconds = params['DelaySeconds'] || queue['DelaySeconds']
 		# set message life according to message retention period
 		message_id = SecureRandom.uuid
@@ -120,6 +125,7 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('ReceiveMessage', '/*/:QueueName') do
+		validate_queue_existence
 		visibility_timeout = params['VisibilityTimeout'] || queue['VisibilityTimeout']
 		visible_messages = []
 		message_ids = redis.zrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
@@ -147,12 +153,14 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('ChangeMessageVisibility', '/*/:QueueName') do
+		validate_queue_existence
 		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
 		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", params['VisibilityTimeout'])
 		return_xml {}
 	end
 
 	action('DeleteMessage', '/*/:QueueName') do
+		validate_queue_existence
 		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
 		redis.zrem("Queues:#{params[:QueueName]}:Messages", message_id)
 		redis.hdel("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
@@ -160,14 +168,17 @@ class Q3 < Sinatra::Base
 	end
 
 	action('SendMessageBatch', '/*/:QueueName') do
+		validate_queue_existence
 		# not implemented yet
 	end
 
 	action('ChangeMessageVisibilityBatch', '/*/:QueueName') do
+		validate_queue_existence
 		# not implemented yet
 	end
 	
 	action('DeleteMessageBatch', '/*/:QueueName') do
+		validate_queue_existence
 		# not implemented yet
 	end
 	
@@ -220,6 +231,10 @@ class Q3 < Sinatra::Base
 					xml.ResponseMetadata { xml.RequestId request_id }
 				end
 			end
+		end
+
+		def validate_queue_existence
+			halt 400, return_error_xml('Sender', 'NonExistentQueue', 'The specified queue does not exist for this wsdl version.') if queue.empty?
 		end
 	end
 
