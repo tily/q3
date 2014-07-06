@@ -71,6 +71,20 @@ describe "Q3" do
 					expect(res[:attributes]["ApproximateNumberOfMessagesNotVisible"]).to eq("0")
 					expect(res[:attributes]["ApproximateNumberOfMessagesDelayed"]).to eq("0")
 				end
+
+				it 'should get precise ApproximateNumberOfMessages*' do
+					queue = q3.queues.create('myqueue001')
+
+					queue.send_message('hello', delay_seconds: 5)
+					queue.send_message('hello')
+					queue.send_message('hello')
+					queue.receive_message
+
+					res = client.get_queue_attributes(queue_url: 'http://localhost/*/myqueue001')
+					expect(res[:attributes]["ApproximateNumberOfMessages"]).to eq("1")
+					expect(res[:attributes]["ApproximateNumberOfMessagesNotVisible"]).to eq("1")
+					expect(res[:attributes]["ApproximateNumberOfMessagesDelayed"]).to eq("1")
+				end
 			end
 
 			context "SetQueueAttributes" do
