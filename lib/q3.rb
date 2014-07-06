@@ -48,6 +48,7 @@ class Q3 < Sinatra::Base
 	end
 
 	action('CreateQueue') do
+		halt 400, return_error_xml('Sender', 'MissingParameter', '') if params['QueueName'].nil?
 		timestamp = Time.now.to_i
 		hash = CREATE_QUEUE.inject({'CreateTimestamp' => timestamp, 'LastModifiedTimestamp' => timestamp}) do |hash, attribute|
 			hash[attribute] = attributes[attribute] || DEFAULTS[attribute]
