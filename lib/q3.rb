@@ -75,8 +75,14 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('SetQueueAttributes', '/*/:QueueName') do
+		attributes = (1..10).to_a.inject({}) do |attributes, i|
+			if (name = params["Attribute.#{i.to_s}.Name"]) && (value = params["Attribute.#{i.to_s}.Value"])
+				attributes[name] = value
+			end
+			attributes
+		end
 		hash = SET_QUEUE_ATTRIBUTES.inject({'LastModifiedTimestamp' => Time.now.to_i}) do |hash, attribute|
-			hash[attribute] = params[attribute] if params[attribute]
+			hash[attribute] = attributes[attribute] if attributes[attribute]
 			hash
 		end
 		redis.hmset("Queues:#{params[:QueueName]}", hash.to_a.flatten)
