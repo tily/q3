@@ -125,18 +125,18 @@ class Q3 < Sinatra::Base
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible")
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
 			message_body = redis.hget("Queues:#{params[:QueueName]}:Messages:#{message_id}", 'MessageBody')
-			recept_handle = SecureRandom.uuid
-			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", recept_handle)
+			receipt_handle = SecureRandom.uuid
+			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", receipt_handle)
 			redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", visibility_timeout)
-			redis.hset("Queues:#{params[:QueueName]}:ReceiptHandles", recept_handle, message_id)
-			visible_messages << {:MessageId => message_id, :MessageBody => message_body, :ReceptHandle => recept_handle}
+			redis.hset("Queues:#{params[:QueueName]}:ReceiptHandles", receipt_handle, message_id)
+			visible_messages << {:MessageId => message_id, :MessageBody => message_body, :ReceiptHandle => receipt_handle}
 			break if visible_messages.size >= 1
 		end
 		return_xml do |xml|
 			visible_messages.each do |message|
 				xml.Message do
 					xml.MessageId     message[:MessageId]
-					xml.ReceiptHandle message[:ReceptHandle]
+					xml.ReceiptHandle message[:ReceiptHandle]
 					xml.MD5OfBody     Digest::MD5.hexdigest(message[:MessageBody])
 					xml.Body          message[:MessageBody]
 				end
@@ -145,15 +145,15 @@ class Q3 < Sinatra::Base
 	end
 	
 	action('ChangeMessageVisibility', '/*/:QueueName') do
-		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceptHandles", params[:ReceptHandle])
+		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
 		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", params['VisibilityTimeout'])
 		return_xml {}
 	end
 
 	action('DeleteMessage', '/*/:QueueName') do
-		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceptHandles", params[:ReceptHandle])
+		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
 		redis.zrem("Queues:#{params[:QueueName]}:Messages", message_id)
-		redis.hdel("Queues:#{params[:QueueName]}:ReceptHandles", params[:ReceptHandle])
+		redis.hdel("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
 		return_xml {}
 	end
 
