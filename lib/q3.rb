@@ -220,6 +220,7 @@ class Q3 < Sinatra::Base
 	
 		def return_xml(&block)
 			builder do |xml|
+				xml.instruct!
 				xml.tag!("#{params['Action']}Response") do
 					xml.tag!("#{params['Action']}Result") do
 						block.call(xml)
