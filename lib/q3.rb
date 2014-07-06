@@ -91,7 +91,7 @@ class Q3 < Sinatra::Base
 	
 	action('DeleteQueue', '/*/:QueueName') do
 		if !UNDELETABLE_QUEUES.include?(params[:QueueName])
-			redis.del("Queues:#{params[:QueueName]}")
+			redis.keys("Queues:#{params[:QueueName]}*").each {|key| redis.del(key) }
 			redis.srem("Queues", params[:QueueName])
 		end
 		return_xml {}
