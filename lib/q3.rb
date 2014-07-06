@@ -39,7 +39,7 @@ class Q3 < Sinatra::Base
 	end
 
 	before do
-		logger.info "#{request_id}: request start with path = #{env['PATH_INFO']}, params = #{params}"
+		logger.info "#{request_id}: request start with path = #{request.path_info}, params = #{params}"
 		content_type 'application/xml'
 	end
 
@@ -185,7 +185,7 @@ class Q3 < Sinatra::Base
 		end
 	
 		def queue_url(queue_name)
-			"http://#{env['HTTP_HOST']}/*/#{queue_name}"
+			"http://#{request.host}/*/#{queue_name}"
 		end
 
 		def attributes
