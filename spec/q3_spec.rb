@@ -107,11 +107,25 @@ describe "Q3" do
 		context 'Message' do
 			context "SendMessage" do
 				it 'should send message' do
+					sqs.create_queue(queue_name: 'myqueue001')
+					sqs.send_message(
+						queue_url: 'http://localhost/*/myqueue001',
+						message_body: 'hello'
+					)
+					res = sqs.receive_message(queue_url: 'http://localhost/*/myqueue001')
+					expect(res[:messages].first[:body]).to eq('hello')
 				end
 			end
 			
 			context "ReceiveMessage" do
 				it 'should receive message' do
+					sqs.create_queue(queue_name: 'myqueue001')
+					sqs.send_message(
+						queue_url: 'http://localhost/*/myqueue001',
+						message_body: 'hello'
+					)
+					res = sqs.receive_message(queue_url: 'http://localhost/*/myqueue001')
+					expect(res[:messages].first[:body]).to eq('hello')
 				end
 			end
 			
