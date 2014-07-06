@@ -22,7 +22,7 @@ describe "Q3" do
 			context "CreateQueue" do
 				it 'should create queue' do
 					sqs.create_queue(:queue_name => 'myqueue001')
-					expect(sqs.list_queues[:queue_urls]).not_to include('myqueue001')
+					expect(sqs.list_queues[:queue_urls]).to include('http://localhost/*/myqueue001')
 				end
 			end
 			
