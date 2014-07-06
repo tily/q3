@@ -12,11 +12,15 @@ RSpec.configure do |config|
   
 end
 
-def sqs
-	@sqs ||= AWS::SQS::Client.new(
+def q3
+	@q3 ||= AWS::SQS.new(
 		:sqs_endpoint => 'localhost',
 		:access_key_id => 'dummy',
 		:secret_access_key => 'dummy',
 		:use_ssl => false
 	)
+end
+
+def client
+  q3.client
 end
