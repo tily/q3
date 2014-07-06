@@ -1,6 +1,10 @@
 %w(digest/md5 json sinatra/base builder redis redis-namespace).each {|x| require x }
 
 class Q3 < Sinatra::Base
+	configure do
+		enable :logging
+	end
+
 	DEFAULTS = {
 		'VisibilityTimeout'             => 30,
 		'MaximumMessageSize'            => 262144,
@@ -21,7 +25,6 @@ class Q3 < Sinatra::Base
 		@paths.each do |path, opts|
 			[:get, :post].each do |x|
 				send(x, path) do
-					logger.info "RequestId: {request_id}"
 					if opt = opts.find {|opt| opt[:action] == params['Action'] }
 						instance_eval(&opt[:block])
 					end
@@ -36,7 +39,12 @@ class Q3 < Sinatra::Base
 	end
 
 	before do
+		logger.info "#{request_id}: request start with path = #{env['PATH_INFO']}, params = #{params}"
 		content_type 'application/xml'
+	end
+
+	after do
+		logger.info "normal end with #{response.body}"
 	end
 
 	action('CreateQueue') do
