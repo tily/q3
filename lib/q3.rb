@@ -163,9 +163,9 @@ class Q3 < Sinatra::Base
 
 	action('DeleteMessage', '/*/:QueueName') do
 		validate_queue_existence
-		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
-		redis.hdel("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
+		message_id = redis.get("Queues:#{params[:QueueName]}:ReceiptHandles:#{params[:ReceiptHandle]}")
 		redis.lrem("Queues:#{params[:QueueName]}:Messages", 0, message_id)
+		redis.del("Queues:#{params[:QueueName]}:ReceiptHandles:#{params[:ReceiptHandle]}")
 		return_xml {}
 	end
 
