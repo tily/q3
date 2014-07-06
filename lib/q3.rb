@@ -53,14 +53,14 @@ class Q3 < Sinatra::Base
 			hash[attribute] = attributes[attribute] || DEFAULTS[attribute]
 			hash
 		end
-		redis.rpush("Queues", params[:QueueName])
+		redis.sadd("Queues", params[:QueueName])
 		redis.hmset("Queues:#{params[:QueueName]}", *hash.to_a)
 		return_xml {|xml| xml.QueueUrl queue_url("#{params[:QueueName]}") }
 	end
 	
 	action('ListQueues') do
 		return_xml do |xml|
-			redis.lrange('Queues', 0, -1).each {|queue_name| xml.QueueUrl queue_url(queue_name) }
+			redis.smembers('Queues').each {|queue_name| xml.QueueUrl queue_url(queue_name) }
 		end
 	end
 	
@@ -97,7 +97,7 @@ class Q3 < Sinatra::Base
 	action('DeleteQueue', '/*/:QueueName') do
 		validate_queue_existence
 		redis.keys("Queues:#{params[:QueueName]}*").each {|key| redis.del(key) }
-		redis.lrem("Queues", 0, params[:QueueName])
+		redis.srem("Queues", params[:QueueName])
 		return_xml {}
 	end
 	
