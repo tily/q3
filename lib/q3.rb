@@ -107,8 +107,10 @@ class Q3 < Sinatra::Base
 			'MessageBody', params[:MessageBody]
 		)
 		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}", queue['MessageRetentionPeriod'])
-		redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed", message_id)
-		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed", delay_seconds) if delay_seconds.to_i > 0
+		if delay_seconds.to_i > 0
+			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed", message_id)
+			redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed", delay_seconds)
+		end
 		return_xml do |xml|
 			xml.MD5OfMessageBody Digest::MD5.hexdigest(params[:MessageBody])
 			xml.MessageId message_id
