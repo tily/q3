@@ -108,7 +108,10 @@ class Q3 < Sinatra::Base
 		redis.rpush("Queues:#{params[:QueueName]}:Messages", message_id)
 		redis.hmset("Queues:#{params[:QueueName]}:Messages:#{message_id}",
 			'MessageId', message_id,
-			'MessageBody', params[:MessageBody]
+			'MessageBody', params[:MessageBody],
+			'SenderId', '*',
+			'SentTimestamp', Time.now.to_i,
+			'ApproximateReceiveCount', 0
 		)
 		redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}", queue['MessageRetentionPeriod'])
 		if delay_seconds.to_i > 0
@@ -130,13 +133,16 @@ class Q3 < Sinatra::Base
 		message_ids.each do |message_id|
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle")
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
-			message_body = redis.hget("Queues:#{params[:QueueName]}:Messages:#{message_id}", 'MessageBody')
+			message = redis.hgetall("Queues:#{params[:QueueName]}:Messages:#{message_id}")
+			message['ApproximateFirstReceiveTimestamp'] ||= Time.now.to_i
+			message['ApproximateReceiveCount'] = message['ApproximateReceiveCount'].to_i + 1
+			redis.hmset("Queues:#{params[:QueueName]}:Messages:#{message_id}", message.to_a.flatten)
 			receipt_handle = SecureRandom.uuid
 			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", receipt_handle)
 			redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", visibility_timeout)
 			redis.set("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", message_id)
 			redis.expire("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", visibility_timeout)
-			visible_messages << {:MessageId => message_id, :MessageBody => message_body, :ReceiptHandle => receipt_handle}
+			visible_messages << {:MessageId => message_id, :MessageBody => message['MessageBody'], :ReceiptHandle => receipt_handle, :Attributes => message}
 			break if visible_messages.size >= max_number_of_messages
 		end
 		return_xml do |xml|
@@ -146,6 +152,9 @@ class Q3 < Sinatra::Base
 					xml.ReceiptHandle message[:ReceiptHandle]
 					xml.MD5OfBody     Digest::MD5.hexdigest(message[:MessageBody])
 					xml.Body          message[:MessageBody]
+					%w(SenderId SentTimestamp ApproximateFirstReceiveTimestamp ApproximateReceiveCount).each do |name|
+						xml.Attribute { xml.Name name; xml.Value message[:Attributes][name] }
+					end
 				end
 			end
 		end
