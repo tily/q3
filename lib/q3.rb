@@ -44,7 +44,7 @@ class Q3 < Sinatra::Base
 	end
 
 	after do
-		logger.info "normal end with #{response.body}"
+		logger.info "#{request_id}: request end with #{response.body}"
 	end
 
 	action('CreateQueue') do
