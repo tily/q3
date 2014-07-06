@@ -151,6 +151,18 @@ describe "Q3" do
 					res = client.receive_message(queue_url: 'http://localhost/*/myqueue001')
 					expect(res[:messages].first[:body]).to eq('hello')
 				end
+
+				it 'should receive message attributes' do
+					queue = q3.queues.create('myqueue001')
+					1.upto(10) do |i|
+						queue.send_message("hello #{i}")
+					end
+					res = q3.client.receive_message(
+						queue_url: 'http://localhost/*/myqueue001',
+						max_number_of_messages: 5
+					)
+					expect(res[:messages].size).to eq(5)
+				end
 			end
 			
 			context "ChangeMessageVisibility" do
