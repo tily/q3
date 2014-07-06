@@ -75,7 +75,23 @@ describe "Q3" do
 
 			context "SetQueueAttributes" do
 				it 'should set queue attributes' do
-					fail
+					sqs.create_queue(queue_name: 'myqueue001')
+					sqs.set_queue_attributes(
+						queue_url: 'http://localhost/*/myqueue001',
+						attributes: {
+							'VisibilityTimeout' => '1',
+							'MessageRetentionPeriod' => '2',
+							'MaximumMessageSize' => '3',
+							'DelaySeconds' => '4',
+							'ReceiveMessageWaitTimeSeconds' => '5',
+						}
+					)
+					res = sqs.get_queue_attributes(queue_url: 'http://localhost/*/myqueue001')
+					expect(res[:attributes]["VisibilityTimeout"]).to eq("1")
+					expect(res[:attributes]["MessageRetentionPeriod"]).to eq("2")
+					expect(res[:attributes]["MaximumMessageSize"]).to eq("3")
+					expect(res[:attributes]["DelaySeconds"]).to eq("4")
+					expect(res[:attributes]["ReceiveMessageWaitTimeSeconds"]).to eq("5")
 				end
 			end
 			
