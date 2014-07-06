@@ -108,7 +108,7 @@ class Q3 < Sinatra::Base
 		validate_queue_existence
 		delay_seconds = params['DelaySeconds'] || queue['DelaySeconds']
 		message_id = SecureRandom.uuid
-		redis.zadd("Queues:#{params[:QueueName]}:Messages", 1, message_id)
+		redis.rpush("Queues:#{params[:QueueName]}:Messages", message_id)
 		redis.hmset("Queues:#{params[:QueueName]}:Messages:#{message_id}",
 			'MessageId', message_id,
 			'MessageBody', params[:MessageBody]
@@ -128,7 +128,7 @@ class Q3 < Sinatra::Base
 		validate_queue_existence
 		visibility_timeout = params['VisibilityTimeout'] || queue['VisibilityTimeout']
 		visible_messages = []
-		message_ids = redis.zrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
+		message_ids = redis.lrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
 		message_ids.each do |message_id|
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle")
 			next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
@@ -164,8 +164,8 @@ class Q3 < Sinatra::Base
 	action('DeleteMessage', '/*/:QueueName') do
 		validate_queue_existence
 		message_id = redis.hget("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
-		redis.zrem("Queues:#{params[:QueueName]}:Messages", message_id)
 		redis.hdel("Queues:#{params[:QueueName]}:ReceiptHandles", params[:ReceiptHandle])
+		redis.lrem("Queues:#{params[:QueueName]}:Messages", 0, message_id)
 		return_xml {}
 	end
 

@@ -47,7 +47,7 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
 | ------------------------------------------------------- | ---------- | ------------------------------ | --------------------------------------------- |
 | Queues                                                  | Sorted Set | Queue Names                    | -                                             |
 | Queues:${QueueName}                                     | Hash       | Queue Attributes               | DeleteQueue action                            |
-| Queues:${QueueName}:Messages                            | Sorted Set | Message Ids                    | DeleteQueue action                            |
+| Queues:${QueueName}:Messages                            | List       | Message Ids                    | DeleteQueue action                            |
 | Queues:${QueueName}:Messages:${MessageId}               | Hash       | Message Attributes             | expires due to MessageRetentionPeriod         |
 | Queues:${QueueName}:Messages:${MessageId}:Delayed       | String     | Message Id                     | expires due to DelaySeconds                   |
 | Queues:${QueueName}:Messages:${MessageId}:ReceiptHandle | String     | ReceiptHandle                  | expires due to VisibilityTimeout              |
