@@ -19,7 +19,6 @@ class Q3 < Sinatra::Base
 		DelaySeconds MaximumMessageSize MessageRetentionPeriod Policy ReceiveMessageWaitTimeSeconds
 		VisibilityTimeout RedrivePolicy
 	)
-	UNDELETABLE_QUEUES = %w(FrontPage)
 
 	def self.dispatch!
 		@paths.each do |path, opts|
@@ -97,10 +96,8 @@ class Q3 < Sinatra::Base
 	
 	action('DeleteQueue', '/*/:QueueName') do
 		validate_queue_existence
-		if !UNDELETABLE_QUEUES.include?(params[:QueueName])
-			redis.keys("Queues:#{params[:QueueName]}*").each {|key| redis.del(key) }
-			redis.lrem("Queues", 0, params[:QueueName])
-		end
+		redis.keys("Queues:#{params[:QueueName]}*").each {|key| redis.del(key) }
+		redis.lrem("Queues", 0, params[:QueueName])
 		return_xml {}
 	end
 	
