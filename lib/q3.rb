@@ -128,7 +128,7 @@ class Q3 < Sinatra::Base
 			recept_handle = SecureRandom.uuid
 			redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", recept_handle)
 			redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:NotVisible", visibility_timeout)
-			redis.hset("Queues:#{params[:QueueName]}:ReceiptHandles", recept_handle, message[:MessageId])
+			redis.hset("Queues:#{params[:QueueName]}:ReceiptHandles", recept_handle, message_id)
 			visible_messages << {:MessageId => message_id, :MessageBody => message_body, :ReceptHandle => recept_handle}
 			break if visible_messages.size >= 1
 		end
