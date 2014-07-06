@@ -213,6 +213,54 @@ describe "Q3" do
 			end
 		end
 
+		context 'Visibility Timeout' do
+			it 'with CreateQueue VisibilityTimeout' do
+				queue = q3.queues.create('myqueue001', :visibility_timeout => 3)
+
+				queue.send_message('hello')
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+
+				message = queue.receive_message
+				expect(message).to be_nil
+
+				sleep 4
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+			end
+
+			it 'with SetQueueAttributes VisibilityTimeout' do
+				queue = q3.queues.create('myqueue001')
+				queue.visibility_timeout = 3
+
+				queue.send_message('hello')
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+
+				message = queue.receive_message
+				expect(message).to be_nil
+
+				sleep 4
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+			end
+
+			it 'with ReceiveMessage VisibilityTimeout' do
+				queue = q3.queues.create('myqueue001')
+
+				queue.send_message('hello')
+				message = queue.receive_message(visibility_timeout: 3)
+				expect(message.body).to eq('hello')
+
+				message = queue.receive_message
+				expect(message).to be_nil
+
+				sleep 4
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+			end
+		end
+
 		context 'Delayed Message' do
 			it 'with CreateQueue DelaySeconds' do
 				queue = q3.queues.create('myqueue001', :delay_seconds => 3)
