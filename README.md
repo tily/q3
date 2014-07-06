@@ -46,7 +46,7 @@ You can use any Amazon SQS client.
 Install gem and you can invoke `q3` command to run api.
 
 	$ gem install q3
-	$ ruby bin/q3
+	$ q3
 	[2014-07-06 19:54:47] INFO  WEBrick 1.3.1
 	[2014-07-06 19:54:47] INFO  ruby 2.0.0 (2014-02-24) [universal.x86_64-darwin13]
 	== Sinatra/1.4.5 has taken the stage on 4567 for development with backup from WEBrick
