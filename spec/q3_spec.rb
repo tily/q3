@@ -1,9 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
-AWS.config(:logger => Logger.new($stdout))
-AWS.config(:log_level => :debug)
-AWS.config(:http_wire_trace => true)
-
 describe "Q3" do
 	before do
 		client.list_queues[:queue_urls].each do |queue_url|
@@ -269,6 +265,7 @@ describe "Q3" do
 		end
 
 		context 'Long Polling' do
+			pending 'not implemented yet'
 		end
 
 		context 'Visibility Timeout' do
