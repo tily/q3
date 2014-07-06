@@ -57,11 +57,11 @@ describe "Q3" do
 			
 			context "GetQueueAttributes" do
 				it 'should get queue attributes' do
-					now = Time.now.to_i
+					now = (Time.now.to_f * 1000.0).to_i
 					client.create_queue(queue_name: 'myqueue001')
 					res = client.get_queue_attributes(queue_url: 'http://localhost/*/myqueue001')
-        	                        expect(res[:attributes]["CreateTimestamp"].to_i).to be_within(5).of(now)
-					expect(res[:attributes]["LastModifiedTimestamp"].to_i).to be_within(5).of(now)
+        	                        expect(res[:attributes]["CreateTimestamp"].to_i).to be_within(5000).of(now)
+					expect(res[:attributes]["LastModifiedTimestamp"].to_i).to be_within(5000).of(now)
 					expect(res[:attributes]["VisibilityTimeout"]).to eq("30")
 					expect(res[:attributes]["MessageRetentionPeriod"]).to eq("345600")
 					expect(res[:attributes]["MaximumMessageSize"]).to eq("262144")
@@ -73,13 +73,13 @@ describe "Q3" do
 				end
 
 				it 'should get updated LastModifiedTimestamp' do
-					past = Time.now.to_i
+					past = (Time.now.to_f * 1000.0).to_i
 					queue = q3.queues.create('myqueue001')
 					sleep 3
-					now = Time.now.to_i
+					now = (Time.now.to_f * 1000.0).to_i
 					queue.visibility_timeout = 1
-					expect(queue.last_modified_timestamp.to_i).not_to be_within(2).of(past)
-					expect(queue.last_modified_timestamp.to_i).to be_within(2).of(now)
+					expect(queue.last_modified_timestamp.to_i).not_to be_within(2000).of(past)
+					expect(queue.last_modified_timestamp.to_i).to be_within(2000).of(now)
 				end
 
 				it 'should get precise ApproximateNumberOfMessages*' do
