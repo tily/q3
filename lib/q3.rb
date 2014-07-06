@@ -126,6 +126,7 @@ class Q3 < Sinatra::Base
 	
 	action('ReceiveMessage', '/*/:QueueName') do
 		validate_queue_existence
+		wait_time_seconds = params['WaitTimeSeconds'] || queue['ReceiveMessageWaitTimeSeconds']
 		max_number_of_messages = params['MaxNumberOfMessages'] ? params['MaxNumberOfMessages'].to_i : 1
 		visibility_timeout = params['VisibilityTimeout'] || queue['VisibilityTimeout']
 		visible_messages = []
