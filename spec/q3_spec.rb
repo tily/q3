@@ -168,4 +168,28 @@ describe "Q3" do
 			end
 		end
 	end
+
+	context 'Features' do
+		context 'Delayed Message' do
+			it 'with CreateQueue DelaySeconds' do
+				queue = q3.queues.create('myqueue001', :delay_seconds => 3)
+				queue.send_message('hello')
+				message = queue.receive_message
+				expect(message).to be_nil
+				sleep 4
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+			end
+
+			it 'with SendMessage DelaySeconds' do
+				queue = q3.queues.create('myqueue001')
+				queue.send_message('hello', :delay_seconds => 3)
+				message = queue.receive_message
+				expect(message).to be_nil
+				sleep 4
+				message = queue.receive_message
+				expect(message.body).to eq('hello')
+			end
+		end
+	end
 end
