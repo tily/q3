@@ -136,6 +136,19 @@ describe "Q3" do
 
 			context "DeleteMessage" do
 				it 'should delete message' do
+					sqs.create_queue(queue_name: 'myqueue001')
+					sqs.send_message(
+						queue_url: 'http://localhost/*/myqueue001',
+						message_body: 'hello'
+					)
+					res = sqs.receive_message(queue_url: 'http://localhost/*/myqueue001')
+					receipt_handle = res[:messages].first[:receipt_handle]
+					sqs.delete_message(
+						queue_url: 'http://localhost/*/myqueue001',
+						receipt_handle: receipt_handle
+					)
+					res = sqs.receive_message(queue_url: 'http://localhost/*/myqueue001')
+					expect(res[:messages]).to be_empty
 				end
 			end
 		end
