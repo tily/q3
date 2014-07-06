@@ -126,6 +126,7 @@ class Q3 < Sinatra::Base
 	
 	action('ReceiveMessage', '/*/:QueueName') do
 		validate_queue_existence
+		max_number_of_messages = params['MaxNumberOfMessages']
 		visibility_timeout = params['VisibilityTimeout'] || queue['VisibilityTimeout']
 		visible_messages = []
 		message_ids = redis.lrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
@@ -139,7 +140,7 @@ class Q3 < Sinatra::Base
 			redis.set("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", message_id)
 			redis.expire("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", visibility_timeout)
 			visible_messages << {:MessageId => message_id, :MessageBody => message_body, :ReceiptHandle => receipt_handle}
-			break if visible_messages.size >= 1
+			break if visible_messages.size >= max_number_of_messages
 		end
 		return_xml do |xml|
 			visible_messages.each do |message|
