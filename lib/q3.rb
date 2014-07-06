@@ -107,7 +107,6 @@ class Q3 < Sinatra::Base
 	action('SendMessage', '/*/:QueueName') do
 		validate_queue_existence
 		delay_seconds = params['DelaySeconds'] || queue['DelaySeconds']
-		# set message life according to message retention period
 		message_id = SecureRandom.uuid
 		redis.zadd("Queues:#{params[:QueueName]}:Messages", 1, message_id)
 		redis.hmset("Queues:#{params[:QueueName]}:Messages:#{message_id}",
