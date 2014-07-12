@@ -120,7 +120,8 @@ class Q3 < Sinatra::Base
 			visibility_timeout = params['VisibilityTimeout'] || queue['VisibilityTimeout']
 			visible_messages = []
 			message_ids = redis.lrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
-			message_ids = message_ids.reverse if params['Q3PopMessages'] == 'true'
+			message_ids.reverse! if params['Q3ReceiveType'] == 'pop'
+			message_ids.shuffle! if params['Q3ReceiveType'] == 'sample'
 			message_ids.each do |message_id|
 				next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle")
 				next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
