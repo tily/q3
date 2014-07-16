@@ -265,7 +265,57 @@ describe "Q3" do
 		end
 
 		context 'Long Polling' do
-			pending 'not implemented yet'
+			before do
+				@queue = q3.queues.create('myqueue001')
+			end
+
+			context 'with CreateQueue ReceiveMessageWaitTimeSeconds' do
+				before do
+					@queue.wait_time_seconds = 3
+				end
+
+				it 'Timeouts in WaitTimeSeconds when no messages are received' do
+					result = nil
+					@queue.poll(:wait_time_seconds => nil, :idle_timeout => 4) do |message|
+						result = message
+					end
+					expect(result).to be_nil
+				end
+
+				it 'Timeouts in WaitTimeSeconds when a message is received' do
+					result = nil
+					Thread.new do
+						sleep 2
+						@queue.send_message('hello')
+					end
+					@queue.poll(:wait_time_seconds => nil, :idle_timeout => 4) do |message|
+						result = message
+					end
+					expect(result).not_to be_nil
+				end
+			end
+
+			context 'with ReceiveMessage WaitTimeSeconds' do
+				it 'Timeouts in WaitTimeSeconds when no messages are received' do
+					result = nil
+					@queue.poll(:wait_time_seconds => 3, :idle_timeout => 4) do |message|
+						result = message
+					end
+					expect(result).to be_nil
+				end
+
+				it 'Timeouts in WaitTimeSeconds when a message is received' do
+					result = nil
+					Thread.new do
+						sleep 2
+						@queue.send_message('hello')
+					end
+					@queue.poll(:wait_time_seconds => 3, :idle_timeout => 4) do |message|
+						result = message
+					end
+					expect(result).not_to be_nil
+				end
+			end
 		end
 
 		context 'Visibility Timeout' do
