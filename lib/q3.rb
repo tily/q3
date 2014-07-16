@@ -115,27 +115,20 @@ class Q3 < Sinatra::Base
 		
 		action('ReceiveMessage') do
 			validate_queue_existence
-			wait_time_seconds = params['WaitTimeSeconds'] || queue['ReceiveMessageWaitTimeSeconds']
-			max_number_of_messages = params['MaxNumberOfMessages'] ? params['MaxNumberOfMessages'].to_i : 1
-			visibility_timeout = params['VisibilityTimeout'] || queue['VisibilityTimeout']
-			visible_messages = []
-			message_ids = redis.lrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
-			message_ids.reverse! if params['Q3ReceiveType'] == 'pop'
-			message_ids.shuffle! if params['Q3ReceiveType'] == 'sample'
-			message_ids.each do |message_id|
-				next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle")
-				next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
-				message = redis.hgetall("Queues:#{params[:QueueName]}:Messages:#{message_id}")
-				message['ApproximateFirstReceiveTimestamp'] ||= now
-				message['ApproximateReceiveCount'] = (message['ApproximateReceiveCount'].to_i + 1).to_s
-				redis.hmset("Queues:#{params[:QueueName]}:Messages:#{message_id}", message.to_a.flatten)
-				receipt_handle = SecureRandom.uuid
-				redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", receipt_handle)
-				redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", visibility_timeout)
-				redis.set("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", message_id)
-				redis.expire("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", visibility_timeout)
-				visible_messages << {:MessageId => message_id, :MessageBody => message['MessageBody'], :ReceiptHandle => receipt_handle, :Attributes => message}
-				break if visible_messages.size >= max_number_of_messages
+			wait_time_seconds = (params['WaitTimeSeconds'] || queue['ReceiveMessageWaitTimeSeconds'] || 0).to_i
+			visible_messages = get_visible_messages(get_message_ids)
+			if visible_messages.empty? && wait_time_seconds > 0
+				begin
+					timeout(wait_time_seconds) do
+						loop do
+							message_ids = redis.lrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
+							visible_messages = get_visible_messages(get_message_ids)
+							break if !visible_messages.empty?
+							sleep 0.3
+						end
+					end
+				rescue Timeout::Error => e
+				end
 			end
 			response_xml do |xml|
 				visible_messages.each do |message|
@@ -212,6 +205,42 @@ class Q3 < Sinatra::Base
 
 		def now
 			(Time.now.to_f * 1000.0).to_i
+		end
+
+
+		def visibility_timeout
+			@visibility_timeout ||= (params['VisibilityTimeout'] || queue['VisibilityTimeout']).to_i
+		end
+
+		def max_number_of_messages
+			@max_number_of_messages ||= (params['MaxNumberOfMessages'] ? params['MaxNumberOfMessages'] : 1).to_i
+		end
+
+		def get_visible_messages(message_ids)
+			visible_messages = []
+			message_ids.each do |message_id|
+				next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle")
+				next if redis.exists("Queues:#{params[:QueueName]}:Messages:#{message_id}:Delayed")
+				message = redis.hgetall("Queues:#{params[:QueueName]}:Messages:#{message_id}")
+				message['ApproximateFirstReceiveTimestamp'] ||= now
+				message['ApproximateReceiveCount'] = (message['ApproximateReceiveCount'].to_i + 1).to_s
+				redis.hmset("Queues:#{params[:QueueName]}:Messages:#{message_id}", message.to_a.flatten)
+				receipt_handle = SecureRandom.uuid
+				redis.set("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", receipt_handle)
+				redis.expire("Queues:#{params[:QueueName]}:Messages:#{message_id}:ReceiptHandle", visibility_timeout)
+				redis.set("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", message_id)
+				redis.expire("Queues:#{params[:QueueName]}:ReceiptHandles:#{receipt_handle}", visibility_timeout)
+				visible_messages << {:MessageId => message_id, :MessageBody => message['MessageBody'], :ReceiptHandle => receipt_handle, :Attributes => message}
+				break if visible_messages.size >= max_number_of_messages
+			end
+			visible_messages
+		end
+
+		def get_message_ids
+			message_ids = redis.lrange("Queues:#{params[:QueueName]}:Messages", 0, -1)
+			message_ids.reverse! if params['Q3ReceiveType'] == 'pop'
+			message_ids.shuffle! if params['Q3ReceiveType'] == 'sample'
+			message_ids
 		end
 	end
 
