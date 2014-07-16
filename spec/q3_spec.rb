@@ -2,15 +2,11 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe "Q3" do
 	before do
-		client.list_queues[:queue_urls].each do |queue_url|
-			client.delete_queue(:queue_url => queue_url)
-		end
+		q3.queues.each {|queue| queue.delete }
 	end
 
 	after do
-		client.list_queues[:queue_urls].each do |queue_url|
-			client.delete_queue(:queue_url => queue_url)
-		end
+		q3.queues.each {|queue| queue.delete }
 	end
 
 	context 'Actions' do
