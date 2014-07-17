@@ -104,3 +104,6 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
 
  * https
  * mount on subdirectory
+ * dead letter queues
+ * message attributes
+ * batch actions 
