@@ -100,6 +100,11 @@ See for complete action list: [Welcome - Amazon Simple Queue Service](http://doc
 | Queues:${QueueName}:Messages:${MessageId}:ReceiptHandle | String     | ReceiptHandle                  | expires due to VisibilityTimeout              |
 | Queues:${QueueName}:ReceiptHandles:${ReceiptHandle}     | String     | Message Id                     | expires due to VisibilityTimeout              |
 
+## See Also
+
+* [adamw/elasticmq](https://github.com/adamw/elasticmq)
+* [iriscouch/cqs](https://github.com/iriscouch/cqs/)
+
 ## TODO
 
  * https
